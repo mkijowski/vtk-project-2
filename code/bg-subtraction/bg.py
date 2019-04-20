@@ -8,9 +8,16 @@ parser.add_argument('--algo', type=str, help='Background subtraction method (KNN
 args = parser.parse_args()
 
 if args.algo == 'MOG2':
-    backSub = cv.createBackgroundSubtractorMOG2()
+    backSub = cv.createBackgroundSubtractorMOG2(history=400,varThreshold=150,detectShadows=0)
+    backSub.setComplexityReductionThreshold(0.1)
+    backSub.setVarThresholdGen(5)
+    backSub.setVarMax(75)
+    backSub.setVarMin(30)
+    backSub.setVarInit(40)
 else:
     backSub = cv.createBackgroundSubtractorKNN()
+
+
 capture = cv.VideoCapture(cv.samples.findFileOrKeep(args.input))
 if not capture.isOpened:
     print('Unable to open: ' + args.input)
@@ -21,16 +28,18 @@ while True:
         break
     
     fgMask = backSub.apply(frame)
-    
-    
+    #varmax = backSub.getVarMin()
+    #print(varmax)
+
     cv.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
     cv.putText(frame, str(capture.get(cv.CAP_PROP_POS_FRAMES)), (15, 15),
                cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
     
 
-    dst = cv.fastNlMeansDenoising(fgMask,None,3,7,11)
+    #dst = cv.fastNlMeansDenoising(fgMask,None,3,7,11)
+    #cv.imshow('FG Mask', dst)
     cv.imshow('Frame', frame)
-    cv.imshow('FG Mask', dst)
+    cv.imshow('FG Mask', fgMask)
     
     keyboard = cv.waitKey(30)
     if keyboard == 'q' or keyboard == 27:
