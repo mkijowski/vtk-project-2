@@ -1,0 +1,59 @@
+bootstrap:docker
+From:ubuntu:18.04
+
+
+%environment
+	PATH=/opt/anaconda2/bin/:$PATH
+	PROMPT_COMMAND=
+
+%post
+	apt update 
+	apt install -y \
+	    wget \
+	    unzip \
+	    git \
+	    cmake \
+	    make \
+	    build-essential \
+      libgtk2.0-dev \
+      pkg-config \
+      libxrender1 \
+      libavcodec-dev \
+      libavdevice-dev \
+      ffmpeg \
+      libv4l-dev
+
+
+	wget https://repo.anaconda.com/archive/Anaconda2-2018.12-Linux-x86_64.sh -O /opt/anaconda.sh
+  wget https://github.com/opencv/opencv/archive/4.1.0.zip -O /opt/opencv.zip
+
+	bash /opt/anaconda.sh -b -p /opt/anaconda2
+	rm /opt/anaconda.sh
+	export CMAKE_PREFIX_PATH=/opt/anaconda2
+	export PATH=/opt/anaconda2/bin/:$PATH
+
+	conda update -y -n base conda
+	
+  cd /opt
+  unzip opencv.zip
+  cd /opt/opencv-4.1.0/
+  mkdir build && cd build
+  cmake -D CMAKE_BUILD_TYPE=Release \
+        -D CMAKE_INSTALL_PREFIX=/usr/local \
+        -D PYTHON2_EXECUTABLE=/opt/anaconda2/bin//python \
+        -D PYTHON_INCLUDE_DIR=/opt/anaconda2/include/python2.7/ \
+        -D PYTHON_LIBRARY=/opt/anaconda2/lib/libpython2.7.so \
+        -D PYTHON2_NUMPY_INCLUDE_DIRS=/opt/anaconda2/pkgs/numpy-base-1.15.4-py27hde5b4d6_0/lib/python2.7/site-packages/numpy/core/include/ \
+        -D WITH_LIBV4L=ON \
+        -D WITH_FFMPEG=ON \
+        -D WITH_TBB=ON \
+        -D WITH_GTK=ON \
+        -D WITH_V4L=ON \
+        -D WITH_OPENGL=ON \
+        -D WITH_CUBLAS=ON \
+        -D PYTHON_PACKAGES_PATH=/opt/anaconda2/lib/python2.7/site-packages/ \
+        ..
+  make -j4
+  make install
+  ln -s /usr/local/lib/python2.7/site-packages/cv2/python-2.7/cv2.so /opt/anaconda2/lib/python2.7/site-packages/cv2.so
+  ldconfig
