@@ -21,7 +21,11 @@ From:ubuntu:18.04
       libavcodec-dev \
       libavdevice-dev \
       ffmpeg \
-      libv4l-dev
+      libv4l-dev \
+      libavformat-dev \
+      libswscale-dev \
+      libatlas-base-dev
+
 
 
 	wget https://repo.anaconda.com/archive/Anaconda2-2018.12-Linux-x86_64.sh -O /opt/anaconda.sh
@@ -33,7 +37,8 @@ From:ubuntu:18.04
 	export PATH=/opt/anaconda2/bin/:$PATH
 
 	conda update -y -n base conda
-	
+  ldconfig
+
   cd /opt
   unzip opencv.zip
   cd /opt/opencv-4.1.0/
@@ -53,7 +58,7 @@ From:ubuntu:18.04
         -D WITH_CUBLAS=ON \
         -D PYTHON_PACKAGES_PATH=/opt/anaconda2/lib/python2.7/site-packages/ \
         ..
-  make -j4
+
+  make -j8
   make install
   ln -s /usr/local/lib/python2.7/site-packages/cv2/python-2.7/cv2.so /opt/anaconda2/lib/python2.7/site-packages/cv2.so
-  ldconfig
