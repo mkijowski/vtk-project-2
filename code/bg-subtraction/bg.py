@@ -27,9 +27,10 @@ while True:
     cv.putText(frame, str(capture.get(cv.CAP_PROP_POS_FRAMES)), (15, 15),
                cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
     
-    
+
+    dst = cv.fastNlMeansDenoising(fgMask,None,3,7,11)
     cv.imshow('Frame', frame)
-    cv.imshow('FG Mask', fgMask)
+    cv.imshow('FG Mask', dst)
     
     keyboard = cv.waitKey(30)
     if keyboard == 'q' or keyboard == 27:
