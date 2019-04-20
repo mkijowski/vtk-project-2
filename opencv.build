@@ -24,7 +24,9 @@ From:ubuntu:18.04
       libv4l-dev \
       libavformat-dev \
       libswscale-dev \
-      libatlas-base-dev
+      libatlas-base-dev \
+      libgstreamer1.0-dev \
+      libgstreamer-plugins-base1.0-dev
 
 
 
@@ -59,6 +61,6 @@ From:ubuntu:18.04
         -D PYTHON_PACKAGES_PATH=/opt/anaconda2/lib/python2.7/site-packages/ \
         ..
 
-  make -j8
+  make -j $(nproc)
   make install
   ln -s /usr/local/lib/python2.7/site-packages/cv2/python-2.7/cv2.so /opt/anaconda2/lib/python2.7/site-packages/cv2.so
