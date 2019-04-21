@@ -8,12 +8,13 @@ parser.add_argument('--algo', type=str, help='Background subtraction method (KNN
 args = parser.parse_args()
 
 if args.algo == 'MOG2':
-    backSub = cv.createBackgroundSubtractorMOG2(history=100,varThreshold=200,detectShadows=0)
-    backSub.setComplexityReductionThreshold(.3)
-    backSub.setVarThresholdGen(10)
-    #backSub.setVarMax(75)
-    #backSub.setVarMin(15)
-    #backSub.setVarInit(20)
+    #backSub = cv.createBackgroundSubtractorMOG2(detectShadows=0)
+    backSub = cv.createBackgroundSubtractorMOG2(history=300,varThreshold=100,detectShadows=1)
+    backSub.setComplexityReductionThreshold(.1)
+    backSub.setVarThresholdGen(5)
+    backSub.setVarMax(75)
+    backSub.setVarMin(4)
+    backSub.setVarInit(15)
 else:
     backSub = cv.createBackgroundSubtractorKNN(history=200,dist2Threshold=400,detectShadows=1)
     backSub.setkNNSamples(1)
@@ -28,8 +29,8 @@ while True:
     if frame is None:
         break
 
-    #blur_frame = cv.GaussianBlur(frame,(5, 5), 0)
-    blur_frame = cv.medianBlur(frame,5)
+    blur_frame = cv.GaussianBlur(frame,(5, 5), 0)
+    #blur_frame = cv.medianBlur(frame,3)
     fgBlurMask = backSub.apply(blur_frame)
     fgMask = backSub.apply(frame)
     #varmax = backSub.getVarMin()
@@ -42,12 +43,11 @@ while True:
 
     #dst = cv.fastNlMeansDenoising(fgMask,None,3,7,11)
     #cv.imshow('FG Mask', dst)
-    cv.imshow('Frame', frame)
-    cv.imshow('FG Mask', fgMask)
-    cv.imshow('Blur Frame', fgBlurMask)
-    #diff = cv.absdiff(frame, fgMask)
-    #cv.imshow('Diff', diff)
-
-    keyboard = cv.waitKey(30)
+    #cv.imshow('Frame', frame)
+    #cv.imshow('FG Mask', fgMask)
+    #cv.imshow('Blur Frame', fgBlurMask)
+    img_fg = cv.bitwise_and(frame, frame, mask = fgBlurMask)
+    cv.imshow('FG', img_fg)
+    keyboard = cv.waitKey(1)
     if keyboard == 'q' or keyboard == 27:
         break
