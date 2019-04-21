@@ -29,9 +29,12 @@ while True:
     if frame is None:
         break
 
-    blur_frame = cv.GaussianBlur(frame,(5, 5), 0)
+    #blur_frame = cv.bilateralFilter(frame,9,75,75)
+    blur_frame = cv.GaussianBlur(cv.bilateralFilter(frame,9,75,75),(5,5),0)
+    #blur_frame = cv.GaussianBlur(frame,(5, 5), 0)
     #blur_frame = cv.medianBlur(frame,3)
-    fgBlurMask = cv.fastNlMeansDenoising(backSub.apply(blur_frame),h=20)
+    #fgBlurMask = cv.fastNlMeansDenoising(backSub.apply(blur_frame),h=20)
+    fgBlurMask = backSub.apply(blur_frame)
     
     #fgMask = backSub.apply(frame)
     #varmax = backSub.getVarMin()
