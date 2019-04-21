@@ -9,13 +9,14 @@ def fromMat2Vtk(src):
     importer.SetDataOrigin( 0, 0, 0 )
 
     frame = cv.cvtColor( src, cv.COLOR_BGR2RGB)
+    flipped = cv.flip(frame,0)
     rows,cols,channels = frame.shape
 
     importer.SetWholeExtent( 0, cols - 1 , 0, rows - 1, 0, 0 )
     importer.SetDataExtentToWholeExtent()
     importer.SetDataScalarTypeToUnsignedChar()
     importer.SetNumberOfScalarComponents (channels)
-    importer.SetImportVoidPointer( frame )
+    importer.SetImportVoidPointer( flipped )
     importer.Update()
     return importer.GetOutput()
 

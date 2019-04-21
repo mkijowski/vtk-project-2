@@ -8,15 +8,16 @@ parser.add_argument('--algo', type=str, help='Background subtraction method (KNN
 args = parser.parse_args()
 
 if args.algo == 'MOG2':
-    backSub = cv.createBackgroundSubtractorMOG2(history=400,varThreshold=150,detectShadows=0)
-    backSub.setComplexityReductionThreshold(0.1)
-    backSub.setVarThresholdGen(5)
-    backSub.setVarMax(75)
-    backSub.setVarMin(30)
-    backSub.setVarInit(40)
+    backSub = cv.createBackgroundSubtractorMOG2(history=100,varThreshold=200,detectShadows=0)
+    backSub.setComplexityReductionThreshold(.3)
+    backSub.setVarThresholdGen(10)
+    #backSub.setVarMax(75)
+    #backSub.setVarMin(15)
+    #backSub.setVarInit(20)
 else:
-    backSub = cv.createBackgroundSubtractorKNN()
-
+    backSub = cv.createBackgroundSubtractorKNN(history=200,dist2Threshold=400,detectShadows=1)
+    backSub.setkNNSamples(1)
+    backSub.setNSamples(25)
 
 capture = cv.VideoCapture(cv.samples.findFileOrKeep(args.input))
 if not capture.isOpened:
@@ -26,21 +27,27 @@ while True:
     ret, frame = capture.read()
     if frame is None:
         break
-    
+
+    #blur_frame = cv.GaussianBlur(frame,(5, 5), 0)
+    blur_frame = cv.medianBlur(frame,5)
+    fgBlurMask = backSub.apply(blur_frame)
     fgMask = backSub.apply(frame)
     #varmax = backSub.getVarMin()
     #print(varmax)
 
-    cv.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
-    cv.putText(frame, str(capture.get(cv.CAP_PROP_POS_FRAMES)), (15, 15),
-               cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
-    
+    #cv.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
+    #cv.putText(frame, str(capture.get(cv.CAP_PROP_POS_FRAMES)), (15, 15),
+    #           cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
+
 
     #dst = cv.fastNlMeansDenoising(fgMask,None,3,7,11)
     #cv.imshow('FG Mask', dst)
     cv.imshow('Frame', frame)
     cv.imshow('FG Mask', fgMask)
-    
+    cv.imshow('Blur Frame', fgBlurMask)
+    #diff = cv.absdiff(frame, fgMask)
+    #cv.imshow('Diff', diff)
+
     keyboard = cv.waitKey(30)
     if keyboard == 'q' or keyboard == 27:
         break
