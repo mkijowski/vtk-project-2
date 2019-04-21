@@ -32,7 +32,7 @@ Initial attempts at background subtraction can be found here:
 The bulk of the work being done to remove background data is performed by the
 MOG2 background subtractor.  MOG2 is a Gaussian Mixture-based
 Background/Foreground Segmentation Algorithm based on two papers authored by
-Zoran Zivkovic.[1][zz1] [2][zz2]
+Zoran Zivkovic.[1][1] [2][2]
 
 By tweaking some of the defaults I have obtained a
 fairly good foreground mask with the following MOG2 parameters:
@@ -68,7 +68,7 @@ them as a simple cube with the black background rendered as transparent.
 
 #### Importing into VTK
 Attempting to implement a stackoverflow post of pseudocode by gstevo.
-[3][gstevo]
+[3][3]
 ```
 import vtk
 from vtk.util import numpy_support
@@ -94,6 +94,6 @@ data_3Dvtk = numpy_support.numpy_to_vtk(data_3D)
 ### Links
 [Kwiver - kitware](https://github.com/Kitware/kwiver)
 [vivia - kitware](https://github.com/Kitware/vivia)
-[gstevo]: https://stackoverflow.com/questions/35965273/load-sequence-of-pngs-into-vtkimagedata-for-3d-volume-render-using-python
-[zz1]: http://www.zoranz.net/Publications/zivkovicPRL2006.pdf
-[zz2]: http://www.zoranz.net/Publications/zivkovic2004ICPR.pdf
+[1]: http://www.zoranz.net/Publications/zivkovicPRL2006.pdf
+[2]: http://www.zoranz.net/Publications/zivkovic2004ICPR.pdf
+[3]: https://stackoverflow.com/questions/35965273/load-sequence-of-pngs-into-vtkimagedata-for-3d-volume-render-using-python
