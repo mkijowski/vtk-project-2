@@ -1,6 +1,10 @@
 from __future__ import print_function
 import cv2 as cv
 import argparse
+import vtk
+
+actors = vtk.vtkActor()
+
 parser = argparse.ArgumentParser(description='This program shows how to use background subtraction methods provided by \
                                               OpenCV. You can process both videos and images.')
 parser.add_argument('--input', type=str, help='Path to a video or a sequence of image.', default='/home/mkijowski/videos/VASTChallenge2009-M3-VIDEOPART1.mov')
@@ -31,28 +35,28 @@ while True:
     #blur_frame = cv.GaussianBlur(frame,(5, 5), 0)
     blur_frame = cv.medianBlur(frame,5)
     fgBlurMask = backSub.apply(blur_frame)
-    fgMask = backSub.apply(frame)
-    #varmax = backSub.getVarMin()
-    #print(varmax)
+    #fgMask = backSub.apply(frame)
 
     #cv.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
     #cv.putText(frame, str(capture.get(cv.CAP_PROP_POS_FRAMES)), (15, 15),
     #           cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
 
     cv.imshow('Frame', frame)
-    cv.imshow('FG Mask', fgMask)
+    #cv.imshow('FG Mask', fgMask)
     cv.imshow('Blur Frame', fgBlurMask)
+
+    fromMat2Vtk(fgBlurMask)
 
     keyboard = cv.waitKey(30)
     if keyboard == 'q' or keyboard == 27:
         break
 
-def fromMat2Vtk(src):
+def fromMat2Vtk(opencv_src_img, unstructured_grid):
     importer = vtk.vtkImageImport()
     importer.SetDataSpacing( 1, 1, 1 )
     importer.SetDataOrigin( 0, 0, 0 )
 
-    frame = cv.cvtColor( src, cv.COLOR_BGR2RGB)
+    frame = cv.cvtColor( opencv_src_img, cv.COLOR_BGR2RGB)
     rows,cols,channels = frame.shape
 
     importer.SetWholeExtent( 0, cols - 1 , 0, rows - 1, 0, 0 )
@@ -61,6 +65,7 @@ def fromMat2Vtk(src):
     importer.SetNumberOfScalarComponents (channels)
     importer.SetImportVoidPointer( frame )
     importer.Update()
+    
     return importer.GetOutput()
 
 

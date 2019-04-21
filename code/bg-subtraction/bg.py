@@ -31,8 +31,9 @@ while True:
 
     blur_frame = cv.GaussianBlur(frame,(5, 5), 0)
     #blur_frame = cv.medianBlur(frame,3)
-    fgBlurMask = backSub.apply(blur_frame)
-    fgMask = backSub.apply(frame)
+    fgBlurMask = cv.fastNlMeansDenoising(backSub.apply(blur_frame),h=20)
+    
+    #fgMask = backSub.apply(frame)
     #varmax = backSub.getVarMin()
     #print(varmax)
 
