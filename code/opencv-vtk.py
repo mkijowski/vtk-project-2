@@ -60,7 +60,7 @@ def main():
   # Setup interactor style (this is what implements the zooming, panning and brightness adjustment functionality)
   style = vtk.vtkInteractorStyleImage()
   interactor.SetInteractorStyle(style)
-  
+
   # Render and start interaction
   interactor.Start()
 
