@@ -28,17 +28,13 @@ def main():
   img = cv.imread (inputFilename, cv.IMREAD_COLOR)
 
    # Read the image
-  reader = vtk.vtkJPEGReader()
-  reader.SetFileName(inputFilename)
-  reader.Update()
+  #reader = vtk.vtkJPEGReader()
+  #reader.SetFileName(inputFilename)
+  #reader.Update()
 
-  otherreader = vtk.vtkImageData()
-
-  #fromMat2Vtk (input, otherreader)
 
   # Create an actor
   actor = vtk.vtkImageActor()
-  #actor.GetMapper().SetInputConnection(reader.GetOutputPort())
   actor.GetMapper().SetInputData(fromMat2Vtk (img))
 
   # Setup renderer

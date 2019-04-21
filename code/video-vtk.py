@@ -1,13 +1,58 @@
 from __future__ import print_function
+import numpy as np
 import cv2 as cv
 import argparse
 import vtk
+import sys
+import os
+
+sys.path.append(os.path.abspath("/home/mkijowski/git/vtk-project-2/libs"))
+import numpy_support
+
 
 parser = argparse.ArgumentParser(description='This program shows how to use background subtraction methods provided by \
                                               OpenCV. You can process both videos and images.')
 parser.add_argument('--input', type=str, help='Path to a video or a sequence of image.', default='/home/mkijowski/videos/VASTChallenge2009-M3-VIDEOPART1.mov')
 parser.add_argument('--algo', type=str, help='Background subtraction method (KNN, MOG2).', default='MOG2')
 args = parser.parse_args()
+
+def main2():
+    fromVid2Mat(args)
+
+    #number of frames in loaded video
+    #while capture?
+        #
+
+def main():
+
+  img = cv.imread (inputFilename, cv.IMREAD_COLOR)
+
+  # Create an actor
+  actor = vtk.vtkImageActor()
+  actor.GetMapper().SetInputData(fromMat2Vtk (img))
+
+  # Setup renderer
+  colors = vtk.vtkNamedColors()
+
+  renderer = vtk.vtkRenderer()
+  renderer.AddActor(actor)
+  renderer.ResetCamera()
+  #renderer.SetBackground(colors.GetColor3d("Burlywood").GetData())
+
+  # Setup render window
+  window = vtk.vtkRenderWindow()
+  window.AddRenderer(renderer)
+
+  # Setup render window interactor
+  interactor = vtk.vtkRenderWindowInteractor()
+  interactor.SetRenderWindow(window)
+
+  # Setup interactor style (this is what implements the zooming, panning and brightness adjustment functionality)
+  style = vtk.vtkInteractorStyleImage()
+  interactor.SetInteractorStyle(style)
+
+  # Render and start interaction
+  interactor.Start()
 
 
 def fromVid2Mat(args):
@@ -37,26 +82,24 @@ def fromVid2Mat(args):
         if frame is None:
             break
 
-        #blur_frame = cv.bilateralFilter(frame,9,75,75)
-        blur_frame = cv.GaussianBlur(cv.bilateralFilter(frame,9,75,75),(5,5),0)
-        #blur_frame = cv.GaussianBlur(frame,(5, 5), 0)
-        #blur_frame = cv.medianBlur(frame,3)
-        #fgBlurMask = cv.fastNlMeansDenoising(backSub.apply(blur_frame),h=20)
-        fgBlurMask = backSub.apply(blur_frame)
-
-        #cv.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
-        #cv.putText(frame, str(capture.get(cv.CAP_PROP_POS_FRAMES)), (15, 15),
-        #           cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
-
-        #cv.imshow('Frame', frame)
-        #cv.imshow('FG Mask', fgMask)
-        #cv.imshow('Blur Frame', fgBlurMask)
-        img_fg = cv.bitwise_and(frame, frame, mask = fgBlurMask)
-        cv.imshow('FG', img_fg)
+        rows,cols,channels = frame.shape
+        length = int(capture.get(cv.CAP_PROP_FRAME_COUNT))
+        data_3D = np.zeros([cols,rows,length])
+        while True:
+          ret, frame = capture.read()
+          if frame is None:
+            break
+          #blur_frame = cv.bilateralFilter(frame,9,75,75)
+          blur_frame = cv.GaussianBlur(cv.bilateralFilter(frame,9,75,75),(5,5),0)
+          fgBlurMask = backSub.apply(blur_frame)
+          img_fg = cv.bitwise_and(frame, frame, mask = fgBlurMask)
+          #cv.imshow('FG', img_fg)
+          vtk_data = fromMat2Vtk(img_fg)
+          data_3D[:,:,capture.get(cv.CAP_PROP_POS_FRAMES)] = ???
 
 
-        keyboard = cv.waitKey(1)
-        if keyboard == 'q' or keyboard == 27:
+          keyboard = cv.waitKey(1)
+          if keyboard == 'q' or keyboard == 27:
             break
 
 def fromMat2Vtk(opencv_src_img):
@@ -75,7 +118,6 @@ def fromMat2Vtk(opencv_src_img):
     importer.Update()
     return importer.GetOutput()
 
+if __name__ == '__main__':
+    main()
 
-
-
-fromVid2Mat(args)
