@@ -32,7 +32,7 @@ Initial attempts at background subtraction can be found here:
 The bulk of the work being done to remove background data is performed by the
 MOG2 background subtractor.  MOG2 is a Gaussian Mixture-based
 Background/Foreground Segmentation Algorithm based on two papers authored by
-Zoran Zivkovic.[1][1] [2][2]
+Zoran Zivkovic.[1] [2]
 
 By tweaking some of the defaults I have obtained a
 fairly good foreground mask with the following MOG2 parameters:
