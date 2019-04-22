@@ -21,54 +21,28 @@ Main method performs the setup of the VTK pipeline.
 Nothing terribly complicated going on here...
 """
 def main():
+  imageDataGeometryFilter = vtk.vtkImageDataGeometryFilter()
+  imageDataGeometryFilter.SetInputConnection(fromVid2Vtk(args))
+  imageDataGeometryFilter.Update()
 
-  #alphaChannelFunc = vtk.vtkPiecewiseFunction()
-  #alphaChannelFunc.AddPoint(0, 0.0)
+  # Create a mapper and actor
+  mapper = vtk.vtkPolyDataMapper()
+  mapper.SetInputConnection(imageDataGeometryFilter.GetOutputPort())
 
-  #volumeProperty = vtk.vtkVolumeProperty()
-  #volumeProperty.SetScalarOpacity(alphaChannelFunc)
+  actor = vtk.vtkActor()
+  actor.SetMapper(mapper)
 
-  volumeMapper = vtk.vtkFixedPointVolumeRayCastMapper()
-  volumeMapper.SetInputConnection(fromVid2Vtk(args))
-  volumeMapper.SetBlendModeToComposite()
-
-  opacityTransferFunction = vtk.vtkPiecewiseFunction()
-  opacityTransferFunction.AddPoint(20, 0.0)
-  opacityTransferFunction.AddPoint(255, 0.2)
-
-  # Create transfer mapping scalar value to color.
-  colorTransferFunction = vtk.vtkColorTransferFunction()
-  colorTransferFunction.AddRGBPoint(0.0, 0.0, 0.0, 0.0)
-  colorTransferFunction.AddRGBPoint(64.0, 1.0, 0.0, 0.0)
-  colorTransferFunction.AddRGBPoint(128.0, 0.0, 0.0, 1.0)
-  colorTransferFunction.AddRGBPoint(192.0, 0.0, 1.0, 0.0)
-  colorTransferFunction.AddRGBPoint(255.0, 0.0, 0.2, 0.0)
-
-  # The property describes how the data will look.
-  volumeProperty = vtk.vtkVolumeProperty()
-  volumeProperty.SetColor(colorTransferFunction)
-  volumeProperty.SetScalarOpacity(opacityTransferFunction)
-  #volumeProperty.ShadeOn()
-  volumeProperty.SetInterpolationTypeToLinear()
-
-  volume = vtk.vtkVolume()
-  volume.SetMapper(volumeMapper)
-  volume.SetProperty(volumeProperty)
-  volume.Update()
-
+  # Visualization
   renderer = vtk.vtkRenderer()
-  renderWin = vtk.vtkRenderWindow()
-  renderWin.AddRenderer(renderer)
-  renderInteractor = vtk.vtkRenderWindowInteractor()
-  renderInteractor.SetRenderWindow(renderWin)
+  renderWindow = vtk.vtkRenderWindow()
+  renderWindow.AddRenderer(renderer)
+  renderWindowInteractor = vtk.vtkRenderWindowInteractor()
+  renderWindowInteractor.SetRenderWindow(renderWindow)
 
-  renderer.AddVolume(volume)
-  renderer.SetBackground(1, 1, 1)
-  renderWin.SetSize(400, 400)
-
-  renderInteractor.Initialize()
-  renderWin.Render()
-  renderInteractor.Start()
+  renderer.AddActor(actor)
+  renderer.SetBackground(colors.GetColor3d("white")) # Background color white
+  renderWindow.Render()
+  renderWindowInteractor.Start()
 
 """
 fromVid2VTK takes two arguments from ArgumentParser.
@@ -126,22 +100,23 @@ def fromVid2Vtk(args):
         ret, frame = capture.read()
 
     ### Stack the frames into one object, swap the 2 and 3 axes to prepare for VTK
-    squash1 = np.swapaxes(np.stack(video, axis=-1),2,3)
-    squash = np.ascontiguousarray(squash1, dtype=np.uint8)
-    #data_string = squash.tostring()
-
+    squash = np.ascontiguousarray(np.swapaxes(np.stack(video, axis=-1),2,3), dtype=np.uint8)
+    data_string = squash.tostring()
 
     ### Create VTK image import and load frame data into it
     importer = vtk.vtkImageImport()
     importer.SetDataSpacing( 1, 1, 1 )
     importer.SetDataOrigin( 0, 0, 0 )
 
-    importer.SetWholeExtent( 0, cols - 1 , 0, rows - 1, 0, length-2 )
+    importer.SetWholeExtent( 0, cols - 1 , 0, rows - 1, 0, length-1 )
     importer.SetDataExtentToWholeExtent()
     importer.SetDataScalarTypeToUnsignedChar()
     importer.SetNumberOfScalarComponents (channels)
+
     #importer.CopyImportVoidPointer(data_string, len(data_string))
-    importer.SetImportVoidPointer( squash )
+    #importer.SetImportVoidPointer( squash )
+    importer.SetImportVoidPointer( data_string )
+
     importer.Update()
     return importer.GetOutputPort()
 
