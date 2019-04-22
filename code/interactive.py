@@ -4,13 +4,8 @@ import cv2 as cv
 import argparse
 import vtk
 
-parser = argparse.ArgumentParser(description='This program shows how to use background subtraction methods provided by \
-                                              OpenCV. You can process both videos and images.')
-parser.add_argument('--input', type=str, help='Path to a video or a sequence of image.', default='/home/mkijowski/videos/VASTChallenge2009-M3-VIDEOPART1.mov')
-parser.add_argument('--algo', type=str, help='Background subtraction method (KNN, MOG2).', default='MOG2')
-args = parser.parse_args()
 
-def main():
+def vismain(squash,rows,cols,channels,length):
 
   #alphaChannelFunc = vtk.vtkPiecewiseFunction()
   #alphaChannelFunc.AddPoint(0, 0.0)
@@ -19,7 +14,7 @@ def main():
   #volumeProperty.SetScalarOpacity(alphaChannelFunc)
 
   volumeMapper = vtk.vtkFixedPointVolumeRayCastMapper()
-  volumeMapper.SetInputConnection(fromVid2Vtk(args))
+  volumeMapper.SetInputConnection(fromMat2Vtk(squash,rows,cols,channels,length))
   volumeMapper.SetBlendModeToComposite()
 
   volume = vtk.vtkVolume()
@@ -46,23 +41,18 @@ def main():
   renderWin.Render()
   renderInteractor.Start()
 
-def fromVid2Vtk(args):
-    if args.algo == 'MOG2':
-        backSub = cv.createBackgroundSubtractorMOG2()
-        backSub.setHistory(300)
-        backSub.setVarThreshold(100)
-        backSub.setDetectShadows(1)
-        backSub.setComplexityReductionThreshold(.1)
-        backSub.setVarThresholdGen(5)
-        backSub.setVarMax(75)
-        backSub.setVarMin(4)
-        backSub.setVarInit(15)
-    else:
-        backSub = cv.createBackgroundSubtractorKNN(history=200,dist2Threshold=400,detectShadows=1)
-        backSub.setkNNSamples(1)
-        backSub.setNSamples(25)
+def fromVid2Mat(args):
+    backSub = cv.createBackgroundSubtractorMOG2()
+    backSub.setHistory(300)
+    backSub.setVarThreshold(100)
+    backSub.setDetectShadows(1)
+    backSub.setComplexityReductionThreshold(.1)
+    backSub.setVarThresholdGen(5)
+    backSub.setVarMax(75)
+    backSub.setVarMin(4)
+    backSub.setVarInit(15)
 
-    capture = cv.VideoCapture(cv.samples.findFileOrKeep(args.input))
+    capture = cv.VideoCapture(cv.samples.findFileOrKeep(args))
     if not capture.isOpened:
         print('Unable to open: ' + args.input)
         exit(0)
@@ -85,6 +75,10 @@ def fromVid2Vtk(args):
         ret, frame = capture.read()
     
     squash = np.swapaxes(np.stack(video, axis=-1),2,3)
+    
+    return squash
+    
+def fromMat2Vtk(squash,rows,cols,channels,length):
     data_string = squash.tostring()
 
     importer = vtk.vtkImageImport()
@@ -104,6 +98,4 @@ def exitCheck(obj, event):
     if obj.GetEventPending() != 0:
         obj.SetAbortRender(1)
 
-if __name__ == '__main__':
-    main()
 
