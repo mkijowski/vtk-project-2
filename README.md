@@ -121,5 +121,7 @@ Segmentation fault (core dumped)
 
 ### Links
 [MedicalDemo4](https://lorensen.github.io/VTKExamples/site/Python/Medical/MedicalDemo4/)
+
 [Kwiver - kitware](https://github.com/Kitware/kwiver)
+
 [vivia - kitware](https://github.com/Kitware/vivia)
