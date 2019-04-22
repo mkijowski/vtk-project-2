@@ -37,9 +37,7 @@ def main():
   # ... set background color to white ...
   renderer.SetBackground(1, 1, 1)
   # ... and set window size.
-  renderWin.SetSize(1000, 1000)
-
-  renderWin.AddObserver("AbortCheckEvent", exitCheck)
+  renderWin.SetSize(400, 400)
 
   renderInteractor.Initialize()
   # Because nothing will be rendered without any input, we order the first render manually before control is handed over to the main-loop.
@@ -84,8 +82,9 @@ def fromVid2Vtk(args):
         video.append(rgb_img_fg)
         ret, frame = capture.read()
     
-    squash = np.swapaxes(np.stack(video, axis=-1),2,3)
-    data_string = squash.tostring()
+    squash1 = np.swapaxes(np.stack(video, axis=-1),2,3)
+    squash = np.ascontiguousarray(squash1, dtype=np.uint8)
+    #data_string = squash.tostring()
 
     importer = vtk.vtkImageImport()
     importer.SetDataSpacing( 1, 1, 1 )
@@ -96,13 +95,9 @@ def fromVid2Vtk(args):
     importer.SetDataScalarTypeToUnsignedChar()
     importer.SetNumberOfScalarComponents (channels)
     #importer.CopyImportVoidPointer(data_string, len(data_string))
-    importer.SetImportVoidPointer( data_string )
+    importer.SetImportVoidPointer( squash )
     importer.Update()
     return importer.GetOutputPort()
-
-def exitCheck(obj, event):
-    if obj.GetEventPending() != 0:
-        obj.SetAbortRender(1)
 
 if __name__ == '__main__':
     main()

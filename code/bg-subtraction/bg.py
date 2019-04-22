@@ -10,9 +10,9 @@ args = parser.parse_args()
 
 if args.algo == 'MOG2':
     backSub = cv.createBackgroundSubtractorMOG2()
-    backsub.setHistory(300)
-    backsub.setVarThreshold(100)
-    backsub.setDetectShadows(1)
+    backSub.setHistory(300)
+    backSub.setVarThreshold(100)
+    backSub.setDetectShadows(1)
     backSub.setComplexityReductionThreshold(.1)
     backSub.setVarThresholdGen(5)
     backSub.setVarMax(75)
