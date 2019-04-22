@@ -17,16 +17,22 @@ as much unneeded information as possible for a cleaner final visualization.
 * Several smaller Nest camera videos for testing have been uploaded
   [here](../master/videos)
 
-#### Starting point
-My first steps for this project were to install OpenCV into my vtk container
-from project 1.  You can find the Singularity container build file in this
-repository [`opencv.build`](../master/opencv.build).
 
-Next I began experimenting with basic background extraction samples available on the
-[OpenCV documentation
-site](https://docs.opencv.org/4.1.0/db/d5c/tutorial_py_bg_subtraction.html).
-Initial attempts at background subtraction can be found here:
-[`./code/bg-subtraction/`](../master/code/bg-subtraction/).
+### Building the singularity container
+The build file for this project is [`opencv.build`](../master/opencv.build).
+This build file uses the same VTK installation as my previous project and
+expands it to build OpenCV version 4.1.0 from source.  
+Note: This can take quite a while...  To build:
+```
+sudo singularity build ~/opencv-vtk.simg ./opencv.build
+```
+
+### Viewing Background subtraction
+The initial work with background subtraction can be found here [`./code/bg-subtraction/`](../master/code/bg-subtraction/).
+To test the background subtraction algorithm (inside the container):
+```
+singularity exec ~/opencv-vtk.simg python ./code/bg-subtraction/bg.py --input ./videos/april18.mp4
+```
 
 #### Pre-processing with OpenCV
 The bulk of the work being done to remove background data is performed by the
@@ -108,16 +114,6 @@ This method provided a good learning experience since it can be tested in python
 interactively which helped with my understanding of the underlying data.  But I
 was still not able to get the data into a vtkImageData format.
 
-### Getting closer
-I think the input data is being uploaded, now I have a pipeline error (yay!?)
-```
-TypeError: SetInputConnection argument 1: method requires a vtkAlgorithmOutput, a vtkImageData was provided.
-
-```
-Progress...?  Or not.  But updating output to outputport I now get:
-```
-Segmentation fault (core dumped)
-```
 
 ### Links
 [MedicalDemo4](https://lorensen.github.io/VTKExamples/site/Python/Medical/MedicalDemo4/)

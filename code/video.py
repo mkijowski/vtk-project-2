@@ -4,12 +4,22 @@ import cv2 as cv
 import argparse
 import vtk
 
-parser = argparse.ArgumentParser(description='This program shows how to use background subtraction methods provided by \
-                                              OpenCV. You can process both videos and images.')
-parser.add_argument('--input', type=str, help='Path to a video or a sequence of image.', default='/home/mkijowski/videos/VASTChallenge2009-M3-VIDEOPART1.mov')
+"""
+Parse arguments for input and background subtraction algorithm.
+--algo has not been tested with background subtractors other then MOG2.
+Note: the default input file probably does not exist in the location specified.
+"""
+parser = argparse.ArgumentParser(description='This program uses background subtraction methods provided by \
+                                              OpenCV and renders a volume in VTK consisting of the foreground \
+                                              from each frame in the video.')
+parser.add_argument('--input', type=str, help='Path to a video.', default='~/videos/VASTChallenge2009-M3-VIDEOPART1.mov')
 parser.add_argument('--algo', type=str, help='Background subtraction method (KNN, MOG2).', default='MOG2')
 args = parser.parse_args()
 
+"""
+Main method performs the setup of the VTK pipeline.
+Nothing terribly complicated going on here...
+"""
 def main():
 
   #alphaChannelFunc = vtk.vtkPiecewiseFunction()
@@ -25,8 +35,8 @@ def main():
   volume = vtk.vtkVolume()
   volume.SetMapper(volumeMapper)
   #volume.SetProperty(volumeProperty)
-  volume.Update()   
-  
+  volume.Update()
+
   renderer = vtk.vtkRenderer()
   renderWin = vtk.vtkRenderWindow()
   renderWin.AddRenderer(renderer)
@@ -34,17 +44,24 @@ def main():
   renderInteractor.SetRenderWindow(renderWin)
 
   renderer.AddVolume(volume)
-  # ... set background color to white ...
   renderer.SetBackground(1, 1, 1)
-  # ... and set window size.
   renderWin.SetSize(400, 400)
 
   renderInteractor.Initialize()
-  # Because nothing will be rendered without any input, we order the first render manually before control is handed over to the main-loop.
   renderWin.Render()
   renderInteractor.Start()
 
+"""
+fromVid2VTK takes two arguments from ArgumentParser.
+args.input is the path to the video file to use as input.
+args.algo is the algorithm used for background subtraction.
+
+fromVid2Vtk returns the OutputPort of a vtkImageImport algorithm.
+This algorithm should contain each frame from the video after the background
+has been subtracted.
+"""
 def fromVid2Vtk(args):
+    ## Configure background subtractor
     if args.algo == 'MOG2':
         backSub = cv.createBackgroundSubtractorMOG2()
         backSub.setHistory(300)
@@ -65,13 +82,20 @@ def fromVid2Vtk(args):
         print('Unable to open: ' + args.input)
         exit(0)
 
-    ### Load first frame to get shapes
+    ### Load first frame to get some required data 
+    ### Needed data are number of rows, columns (resolution of video)
+    ### number of channels (probably 3 since most videos are color RGB)
+    ### and length which is just the total number of frames in the video
     ret, frame = capture.read()
     length = int(capture.get(cv.CAP_PROP_FRAME_COUNT))
     rows,cols,channels = frame.shape
+
+    ### Create array to store each frame
     video = []
-    
-    ### Load video and apply mask
+
+    ### Load video and apply background subtraction to generate mask
+    ### and apply mask to original frame to get foreground
+    ### Fix colors(BGR to RGB) and flip image to prepare data for VTK
     while True:
         if frame is None:
             break
@@ -81,16 +105,19 @@ def fromVid2Vtk(args):
         rgb_img_fg = cv.cvtColor( img_fg, cv.COLOR_BGR2RGB)
         video.append(rgb_img_fg)
         ret, frame = capture.read()
-    
+
+    ### Stack the frames into one object, swap the 2 and 3 axes to prepare for VTK
     squash1 = np.swapaxes(np.stack(video, axis=-1),2,3)
     squash = np.ascontiguousarray(squash1, dtype=np.uint8)
     #data_string = squash.tostring()
 
+
+    ### Create VTK image import and load frame data into it
     importer = vtk.vtkImageImport()
     importer.SetDataSpacing( 1, 1, 1 )
     importer.SetDataOrigin( 0, 0, 0 )
 
-    importer.SetWholeExtent( 0, cols - 1 , 0, rows - 1, 0, length-1 )
+    importer.SetWholeExtent( 0, cols - 1 , 0, rows - 1, 0, length-2 )
     importer.SetDataExtentToWholeExtent()
     importer.SetDataScalarTypeToUnsignedChar()
     importer.SetNumberOfScalarComponents (channels)
@@ -99,6 +126,7 @@ def fromVid2Vtk(args):
     importer.Update()
     return importer.GetOutputPort()
 
+# Run main()
 if __name__ == '__main__':
     main()
 
