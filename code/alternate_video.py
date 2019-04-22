@@ -3,11 +3,11 @@ import numpy as np
 import cv2 as cv
 import argparse
 import vtk
-import sys
-import os
+#import sys
+#import os
 
-sys.path.append(os.path.abspath("/home/mkijowski/git/vtk-project-2/libs"))
-import numpy_support
+#sys.path.append(os.path.abspath("/home/mkijowski/git/vtk-project-2/libs"))
+#import numpy_support
 
 
 parser = argparse.ArgumentParser(description='This program shows how to use background subtraction methods provided by \
@@ -129,10 +129,13 @@ def fromVid2Mat(args):
         fgBlurMask = backSub.apply(blur_frame)
         img_fg = cv.bitwise_and(frame, frame, mask = fgBlurMask)
 
-        video.append(img_fg)
+        rgb_img_fg = cv.cvtColor( img_fg, cv.COLOR_BGR2RGB)
 
-    squash = np.stack(video, axis=-1)
-    return fromMat2Vtk(squash)
+        video.append(rgb_img_fg)
+
+    squash = np.swapaxes(np.stack(video, axis=-1),2,3)
+    #return np.swapaxes(squash,2,3)
+    return fromMat2Vtk(np.ascontiguousarray(squash,dtype=np.uint8),rows,cols,channels,length)
 
 """This content is for my attempt at loading the images in a vtk array
 # per http://vtk.1045678.n5.nabble.com/reconstruct-a-stack-of-TIFF-images-in-3D-td5719585.html
@@ -151,19 +154,17 @@ def fromVid2Mat(args):
           if keyboard == 'q' or keyboard == 27:
             break
 """
-def fromMat2Vtk(opencv_src_img):
+def fromMat2Vtk(video_stack,rows,cols,channels,num_frames):
     importer = vtk.vtkImageImport()
     importer.SetDataSpacing( 1, 1, 1 )
     importer.SetDataOrigin( 0, 0, 0 )
 
-    frame = cv.cvtColor( opencv_src_img, cv.COLOR_BGR2RGB)
-    rows,cols,channels = frame.shape
 
-    importer.SetWholeExtent( 0, cols - 1 , 0, rows - 1, 0, 0 )
+    importer.SetWholeExtent( 0, cols - 1 , 0, rows - 1, 0, num_frames-2 )
     importer.SetDataExtentToWholeExtent()
     importer.SetDataScalarTypeToUnsignedChar()
     importer.SetNumberOfScalarComponents (channels)
-    importer.SetImportVoidPointer( frame )
+    importer.SetImportVoidPointer( video_stack )
     importer.Update()
     return importer.GetOutputPort()
 

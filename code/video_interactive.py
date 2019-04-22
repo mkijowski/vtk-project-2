@@ -3,17 +3,17 @@ import numpy as np
 import cv2 as cv
 import argparse
 import vtk
-import sys
-import os
+#import sys
+#import os
 
-sys.path.append(os.path.abspath("/home/mkijowski/git/vtk-project-2/libs"))
-import numpy_support
+#sys.path.append(os.path.abspath("/home/mkijowski/git/vtk-project-2/libs"))
+#import numpy_support
 
 
 parser = argparse.ArgumentParser(description='This program shows how to use background subtraction methods provided by \
                                               OpenCV. You can process both videos and images.')
 parser.add_argument('--input', type=str, help='Path to a video or a sequence of image.', default='/home/mkijowski/videos/VASTChallenge2009-M3-VIDEOPART1.mov')
-parser.add_argument('--algo', type=str, help='Background subtraction method (KNN, MOG2).', default='MOG2')
+#parser.add_argument('--algo', type=str, help='Background subtraction method (KNN, MOG2).', default='MOG2')
 args = parser.parse_args()
 
 def main():
@@ -24,11 +24,14 @@ def main():
   volumeProperty = vtk.vtkVolumeProperty()
   volumeProperty.SetScalarOpacity(alphaChannelFunc)
 
-  compositeFunction = vtk.vtkVolumeRayCastCompositeFunction()
+  #compositeFunction = vtk.vtkVolumeRayCastCompositeFunction()
+  #compositeFunction = vtk.vtkFixedPointVolumeRayCastCompositeFunction()
 
-  volumeMapper = vtk.vtkVolumeRayCastMapper()
-  volumeMapper.SetVolumeRayCastFunction(compositeFunction)
-  volumeMapper.SetInputConnection(fromVid2Mat(args))
+  volumeMapper = vtk.vtkFixedPointVolumeRayCastMapper()
+  #volumeMapper.SetVolumeRayCastFunction(compositeFunction)
+  mat = fromVid2Mat(args)
+  return mat
+  volumeMapper.SetInputConnection(fromMat2VTK(mat))
 
   volume = vtk.vtkVolume()
   volume.SetMapper(volumeMapper)
@@ -84,56 +87,61 @@ def toms_main():
 
 
 def fromVid2Mat(args):
-    if args.algo == 'MOG2':
-        backSub = cv.createBackgroundSubtractorMOG2()
-        backSub.setHistory(300)
-        backSub.setVarThreshold(100)
-        backSub.setDetectShadows(1)
-        backSub.setComplexityReductionThreshold(.1)
-        backSub.setVarThresholdGen(5)
-        backSub.setVarMax(75)
-        backSub.setVarMin(4)
-        backSub.setVarInit(15)
-    else:
-        backSub = cv.createBackgroundSubtractorKNN(history=200,dist2Threshold=400,detectShadows=1)
-        backSub.setkNNSamples(1)
-        backSub.setNSamples(25)
+#    if args.algo == 'MOG2':
+    backSub = cv.createBackgroundSubtractorMOG2()
+    backSub.setHistory(300)
+    backSub.setVarThreshold(100)
+    backSub.setDetectShadows(1)
+    backSub.setComplexityReductionThreshold(.1)
+    backSub.setVarThresholdGen(5)
+    backSub.setVarMax(75)
+    backSub.setVarMin(4)
+    backSub.setVarInit(15)
+#    else:
+#        backSub = cv.createBackgroundSubtractorKNN(history=200,dist2Threshold=400,detectShadows=1)
+#        backSub.setkNNSamples(1)
+#        backSub.setNSamples(25)
 
-    capture = cv.VideoCapture(cv.samples.findFileOrKeep(args.input))
+    capture = cv.VideoCapture(cv.samples.findFileOrKeep(args))
     if not capture.isOpened:
-        print('Unable to open: ' + args.input)
+        print('Unable to open: ' + args)
         exit(0)
 
+    ### Load first frame to get shapes
+    ret, frame = capture.read()
+
+    length = int(capture.get(cv.CAP_PROP_FRAME_COUNT))
+
+    rows,cols,channels = frame.shape
+    video = []
     ### Load video and apply mask
     while True:
         ret, frame = capture.read()
         if frame is None:
             break
 
-        rows,cols,channels = frame.shape
-        length = int(capture.get(cv.CAP_PROP_FRAME_COUNT))
-""" This content is for my attempt at loading the images in a vtk array
-# per http://vtk.1045678.n5.nabble.com/reconstruct-a-stack-of-TIFF-images-in-3D-td5719585.html
-"""
-        volume = vtkImageData()
-        volume.SetExtent((0, cols - 1, 0, rows - 1, 0, length - 1))
-        ncells = volume.GetNumberOfCells()
-        npoints = volume.GetNumberOfPoints()
-        array = vtkUnsignedShortArray()
-        array.SetNumberOfValues(npoints)
+        #volume = vtkImageData()
+        #volume.SetExtent((0, cols - 1, 0, rows - 1, 0, length - 1))
 
-        while True:
-          ret, frame = capture.read()
-          if frame is None:
-            break
-          #blur_frame = cv.bilateralFilter(frame,9,75,75)
-          blur_frame = cv.GaussianBlur(cv.bilateralFilter(frame,9,75,75),(5,5),0)
-          fgBlurMask = backSub.apply(blur_frame)
-          img_fg = cv.bitwise_and(frame, frame, mask = fgBlurMask)
-          #cv.imshow('FG', img_fg)
-          img = fromMat2Vtk(img_fg)
+        #ncells = volume.GetNumberOfCells()
+        #npoints = volume.GetNumberOfPoints()
+        #array = vtkUnsignedShortArray()
+        #array.SetNumberOfValues(npoints)
+        blur_frame = cv.GaussianBlur(cv.bilateralFilter(frame,9,75,75),(5,5),0)
+        fgBlurMask = backSub.apply(blur_frame)
+        img_fg = cv.bitwise_and(frame, frame, mask = fgBlurMask)
+
+        rgb_img_fg = cv.cvtColor( img_fg, cv.COLOR_BGR2RGB)
+
+        video.append(rgb_img_fg)
+
+    squash = np.stack(video, axis=-1)
+    return squash
+    #return fromMat2Vtk(squash,rows,cols,channels,length)
+
 """This content is for my attempt at loading the images in a vtk array
 # per http://vtk.1045678.n5.nabble.com/reconstruct-a-stack-of-TIFF-images-in-3D-td5719585.html
+"""
 """
           vals = img.GetPointData().GetAbstractArray('scalars')
 # below is not working, cannot enumerate vals...?
@@ -147,22 +155,20 @@ def fromVid2Mat(args):
           keyboard = cv.waitKey(1)
           if keyboard == 'q' or keyboard == 27:
             break
-
-def fromMat2Vtk(opencv_src_img):
+"""
+def fromMat2Vtk(video_stack,rows,cols,channels,num_frames):
     importer = vtk.vtkImageImport()
     importer.SetDataSpacing( 1, 1, 1 )
     importer.SetDataOrigin( 0, 0, 0 )
 
-    frame = cv.cvtColor( opencv_src_img, cv.COLOR_BGR2RGB)
-    rows,cols,channels = frame.shape
 
-    importer.SetWholeExtent( 0, cols - 1 , 0, rows - 1, 0, 0 )
+    importer.SetWholeExtent( 0, cols - 1 , 0, rows - 1, 0, num_frames-1 )
     importer.SetDataExtentToWholeExtent()
     importer.SetDataScalarTypeToUnsignedChar()
     importer.SetNumberOfScalarComponents (channels)
-    importer.SetImportVoidPointer( frame )
+    importer.SetImportVoidPointer( video_stack )
     importer.Update()
-    return importer.GetOutput()
+    return importer.GetOutputPort()
 
 if __name__ == '__main__':
     main()
