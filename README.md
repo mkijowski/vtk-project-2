@@ -67,6 +67,7 @@ The plan from here on out is to load these foreground images into vtk and render
 them as a simple cube with the black background rendered as transparent.
 
 #### Importing into VTK
+##### `numpy_support` in VTK
 Attempting to implement a stackoverflow post of pseudocode by gstevo. [3](https://stackoverflow.com/questions/35965273/load-sequence-of-pngs-into-vtkimagedata-for-3d-volume-render-using-python)
 ```
 import vtk
@@ -89,7 +90,36 @@ for i,p in enumerate(png):
 #save your 3D numpy array out.
 data_3Dvtk = numpy_support.numpy_to_vtk(data_3D)
 ```
+The crux of this attempt relied on a vtk utility called `numpy_support`
+that was deprecated at some point.  I found the github repo containing these
+utilities and attempted to import them into my modern vtk without success.
+
+#### `vtkImageSlice` and `vtkImageStack`
+A good amount of time was spent trying to implement these methods as they seemed
+promising.  Unfortunately I was never able to figure out quite how to implement
+them, also my next attempt seemed more promising.
+
+#### numpy array manipulation
+My last attempt seemed the most promising.  Instead of converting each frame to
+vtk data I instead tried to concatenate each frame into one array and and pass
+that to the provided `fromMat2VTK` function.
+
+This method provided a good learning experience since it can be tested in python
+interactively which helped with my understanding of the underlying data.  But I
+was still not able to get the data into a vtkImageData format.
+
+### Getting closer
+I think the input data is being uploaded, now I have a pipeline error (yay!?)
+```
+TypeError: SetInputConnection argument 1: method requires a vtkAlgorithmOutput, a vtkImageData was provided.
+
+```
+Progress...?  Or not.  But updating output to outputport I now get:
+```
+Segmentation fault (core dumped)
+```
 
 ### Links
+[MedicalDemo4](https://lorensen.github.io/VTKExamples/site/Python/Medical/MedicalDemo4/)
 [Kwiver - kitware](https://github.com/Kitware/kwiver)
 [vivia - kitware](https://github.com/Kitware/vivia)

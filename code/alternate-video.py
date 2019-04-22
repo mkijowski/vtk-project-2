@@ -24,10 +24,11 @@ def main():
   volumeProperty = vtk.vtkVolumeProperty()
   volumeProperty.SetScalarOpacity(alphaChannelFunc)
 
-  compositeFunction = vtk.vtkVolumeRayCastCompositeFunction()
+  #compositeFunction = vtk.vtkVolumeRayCastCompositeFunction()
+  #compositeFunction = vtk.vtkFixedPointVolumeRayCastCompositeFunction()
 
-  volumeMapper = vtk.vtkVolumeRayCastMapper()
-  volumeMapper.SetVolumeRayCastFunction(compositeFunction)
+  volumeMapper = vtk.vtkFixedPointVolumeRayCastMapper()
+  #volumeMapper.SetVolumeRayCastFunction(compositeFunction)
   volumeMapper.SetInputConnection(fromVid2Mat(args))
 
   volume = vtk.vtkVolume()
@@ -104,36 +105,38 @@ def fromVid2Mat(args):
         print('Unable to open: ' + args.input)
         exit(0)
 
+    ### Load first frame to get shapes
+    ret, frame = capture.read()
+
+    length = int(capture.get(cv.CAP_PROP_FRAME_COUNT))
+
+    rows,cols,channels = frame.shape
+    video = []
     ### Load video and apply mask
     while True:
         ret, frame = capture.read()
         if frame is None:
             break
 
-        rows,cols,channels = frame.shape
-        length = int(capture.get(cv.CAP_PROP_FRAME_COUNT))
-""" This content is for my attempt at loading the images in a vtk array
-# per http://vtk.1045678.n5.nabble.com/reconstruct-a-stack-of-TIFF-images-in-3D-td5719585.html
-"""
-        volume = vtkImageData()
-        volume.SetExtent((0, cols - 1, 0, rows - 1, 0, length - 1))
-        ncells = volume.GetNumberOfCells()
-        npoints = volume.GetNumberOfPoints()
-        array = vtkUnsignedShortArray()
-        array.SetNumberOfValues(npoints)
+        #volume = vtkImageData()
+        #volume.SetExtent((0, cols - 1, 0, rows - 1, 0, length - 1))
 
-        while True:
-          ret, frame = capture.read()
-          if frame is None:
-            break
-          #blur_frame = cv.bilateralFilter(frame,9,75,75)
-          blur_frame = cv.GaussianBlur(cv.bilateralFilter(frame,9,75,75),(5,5),0)
-          fgBlurMask = backSub.apply(blur_frame)
-          img_fg = cv.bitwise_and(frame, frame, mask = fgBlurMask)
-          #cv.imshow('FG', img_fg)
-          img = fromMat2Vtk(img_fg)
+        #ncells = volume.GetNumberOfCells()
+        #npoints = volume.GetNumberOfPoints()
+        #array = vtkUnsignedShortArray()
+        #array.SetNumberOfValues(npoints)
+        blur_frame = cv.GaussianBlur(cv.bilateralFilter(frame,9,75,75),(5,5),0)
+        fgBlurMask = backSub.apply(blur_frame)
+        img_fg = cv.bitwise_and(frame, frame, mask = fgBlurMask)
+
+        video.append(img_fg)
+
+    squash = np.stack(video, axis=-1)
+    return fromMat2Vtk(squash)
+
 """This content is for my attempt at loading the images in a vtk array
 # per http://vtk.1045678.n5.nabble.com/reconstruct-a-stack-of-TIFF-images-in-3D-td5719585.html
+"""
 """
           vals = img.GetPointData().GetAbstractArray('scalars')
 # below is not working, cannot enumerate vals...?
@@ -147,7 +150,7 @@ def fromVid2Mat(args):
           keyboard = cv.waitKey(1)
           if keyboard == 'q' or keyboard == 27:
             break
-
+"""
 def fromMat2Vtk(opencv_src_img):
     importer = vtk.vtkImageImport()
     importer.SetDataSpacing( 1, 1, 1 )
@@ -162,7 +165,7 @@ def fromMat2Vtk(opencv_src_img):
     importer.SetNumberOfScalarComponents (channels)
     importer.SetImportVoidPointer( frame )
     importer.Update()
-    return importer.GetOutput()
+    return importer.GetOutputPort()
 
 if __name__ == '__main__':
     main()
