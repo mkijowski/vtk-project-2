@@ -31,7 +31,7 @@ sudo singularity build ~/opencv-vtk.simg ./opencv.build
 The initial work with background subtraction can be found here [`./code/bg-subtraction/`](../master/code/bg-subtraction/).
 To test the background subtraction algorithm (inside the container):
 ```
-singularity exec ~/opencv-vtk.simg python ./code/bg-subtraction/bg.py --input ./videos/april18.mp4
+singularity exec ~/opencv-vtk.simg python ./code/bg-subtraction/bg.py --input ./videos/april-18.mp4
 ```
 
 #### Pre-processing with OpenCV
