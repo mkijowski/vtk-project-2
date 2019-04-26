@@ -7,38 +7,44 @@ From:ubuntu:18.04
 	PROMPT_COMMAND=
 
 %post
-	apt update 
-	apt install -y \
-	    wget \
-	    unzip \
-	    git \
-	    cmake \
-	    make \
-	    build-essential \
-      libgtk2.0-dev \
-      pkg-config \
-      libxrender1 \
-      libavcodec-dev \
-      libavdevice-dev \
-      ffmpeg \
-      libv4l-dev \
-      libavformat-dev \
-      libswscale-dev \
-      libatlas-base-dev \
-      libgstreamer1.0-dev \
-      libgstreamer-plugins-base1.0-dev
+  apt update 
+  apt install -y \
+    wget \
+    unzip \
+    git \
+    cmake \
+    make \
+    build-essential \
+    libglu1-mesa-dev \
+    freeglut3-dev \
+    mesa-common-dev \
+    libgtk2.0-dev \
+    pkg-config \
+    libxrender1 \
+    libavcodec-dev \
+    libavdevice-dev \
+    ffmpeg \
+    libv4l-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libatlas-base-dev \
+    libgstreamer1.0-dev \
+    libgstreamer-plugins-base1.0-dev
 
 
 
-	wget https://repo.anaconda.com/archive/Anaconda2-2018.12-Linux-x86_64.sh -O /opt/anaconda.sh
+  wget https://repo.anaconda.com/archive/Anaconda2-2018.12-Linux-x86_64.sh -O /opt/anaconda.sh
   wget https://github.com/opencv/opencv/archive/4.1.0.zip -O /opt/opencv.zip
 
-	bash /opt/anaconda.sh -b -p /opt/anaconda2
-	rm /opt/anaconda.sh
-	export CMAKE_PREFIX_PATH=/opt/anaconda2
-	export PATH=/opt/anaconda2/bin/:$PATH
+  bash /opt/anaconda.sh -b -p /opt/anaconda2
+  rm /opt/anaconda.sh
+  export CMAKE_PREFIX_PATH=/opt/anaconda2
+  export PATH=/opt/anaconda2/bin/:$PATH
 
-	conda update -y -n base conda
+  conda update -y -n base conda
+  conda install -y cmake pip
+  conda install -y -c anaconda vtk
+
   ldconfig
 
   cd /opt
